@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recruit 招聘</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #FF6B35 0%, #FF590D 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .container {
+            padding: 40px 30px;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 20px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: #FF590D;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+        h1 {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        p {
+            color: rgba(255,255,255,0.85);
+            font-size: 15px;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+        .btn {
+            display: inline-block;
+            background: white;
+            color: #FF590D;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 14px 48px;
+            border-radius: 30px;
+            text-decoration: none;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .hint {
+            margin-top: 20px;
+            color: rgba(255,255,255,0.65);
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">R</div>
+        <h1>欢迎使用 Recruit</h1>
+        <p>海量职位，精准匹配<br>助你找到理想工作</p>
+        <a class="btn" href="enterprise://home" id="openAppBtn">打开 App</a>
+        <p class="hint" id="fallbackHint" style="display:none;">
+            未检测到 App？<br>
+            <a href="#" style="color:white;text-decoration:underline;" id="downloadLink">下载 Recruit App</a>
+        </p>
+    </div>
+
+    <script>
+    (function() {
+        var schemeUrl = 'enterprise://home';
+        var appOpened = false;
+
+        function tryOpenApp() {
+            window.location.href = schemeUrl;
+        }
+
+        function onPageVisibilityChange() {
+            if (document.hidden) {
+                appOpened = true;
+            }
+        }
+
+        function checkFallback() {
+            setTimeout(function() {
+                if (!appOpened && !document.hidden) {
+                    document.getElementById('fallbackHint').style.display = 'block';
+                }
+            }, 2500);
+        }
+
+        document.getElementById('openAppBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            tryOpenApp();
+            setTimeout(function() {
+                if (!document.hidden) {
+                    document.getElementById('fallbackHint').style.display = 'block';
+                }
+            }, 1500);
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('visibilitychange', onPageVisibilityChange);
+            checkFallback();
+        });
+
+        window.addEventListener('pagehide', function() {
+            appOpened = true;
+        });
+        window.addEventListener('blur', function() {
+            appOpened = true;
+        });
+    })();
+    </script>
+</body>
+</html>
