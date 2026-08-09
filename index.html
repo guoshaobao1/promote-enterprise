@@ -75,7 +75,7 @@
         <img class="logo" src="logo.png" alt="职通招聘企业版">
         <h1>欢迎使用 职通招聘企业版</h1>
         <p>海量职位，精准匹配<br>助你找到理想员工</p>
-        <a class="btn" href="enterprise://home" id="openAppBtn">打开 App</a>
+        <a class="btn" href="#" id="openAppBtn">打开 App</a>
         <p class="hint" id="fallbackHint" style="display:none;">
             未检测到 App？<br>
             <a href="#" style="color:white;text-decoration:underline;" id="downloadLink">下载职通招聘企业版 App</a>
@@ -84,11 +84,51 @@
 
     <script>
     (function() {
-        var schemeUrl = 'enterprise://home';
+        var BASE_URL = 'http://192.144.156.150:9092';
         var appOpened = false;
+        var token = null;
+
+        // 页面加载时获取 token
+        function fetchToken(callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', BASE_URL + '/user/loginRegister', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.timeout = 5000;
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        var resp = JSON.parse(xhr.responseText);
+                        if (resp.code === '200' && resp.data && resp.data.token) {
+                            token = resp.data.token;
+                            console.log('Token获取成功');
+                        }
+                    } catch(e) {
+                        console.error('Token解析失败:', e);
+                    }
+                }
+                callback();
+            };
+            xhr.onerror = function() {
+                console.error('Token请求失败');
+                callback();
+            };
+            xhr.ontimeout = function() {
+                console.error('Token请求超时');
+                callback();
+            };
+            xhr.send(JSON.stringify({
+                username: 'admin',
+                password: '123456',
+                phone: '13955274764'
+            }));
+        }
 
         function tryOpenApp() {
-            window.location.href = schemeUrl;
+            var url = 'enterprise://home';
+            if (token) {
+                url += '?token=' + encodeURIComponent(token);
+            }
+            window.location.href = url;
         }
 
         function onPageVisibilityChange() {
@@ -107,15 +147,32 @@
 
         document.getElementById('openAppBtn').addEventListener('click', function(e) {
             e.preventDefault();
-            tryOpenApp();
-            setTimeout(function() {
-                if (!document.hidden) {
-                    document.getElementById('fallbackHint').style.display = 'block';
-                }
-            }, 1500);
+            if (token) {
+                // 已有 token，直接打开
+                tryOpenApp();
+                setTimeout(function() {
+                    if (!document.hidden) {
+                        document.getElementById('fallbackHint').style.display = 'block';
+                    }
+                }, 1500);
+            } else {
+                // 先获取 token 再打开
+                document.getElementById('openAppBtn').textContent = '正在准备...';
+                fetchToken(function() {
+                    document.getElementById('openAppBtn').textContent = '打开 App';
+                    tryOpenApp();
+                    setTimeout(function() {
+                        if (!document.hidden) {
+                            document.getElementById('fallbackHint').style.display = 'block';
+                        }
+                    }, 1500);
+                });
+            }
         });
 
         document.addEventListener('DOMContentLoaded', function() {
+            // 页面加载时预取 token
+            fetchToken(function() {});
             document.addEventListener('visibilitychange', onPageVisibilityChange);
             checkFallback();
         });
