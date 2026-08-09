@@ -84,64 +84,12 @@
 
     <script>
     (function() {
-        var BASE_URL = 'http://192.144.156.150:9092';
         var appOpened = false;
-        var token = null;
 
-        // 页面加载时获取 token
-        function fetchToken(callback) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', BASE_URL + '/user/loginRegister', true);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            xhr.timeout = 5000;
-            xhr.onload = function() {
-                console.log('token请求响应, status:', xhr.status);
-                console.log('token请求响应body:', xhr.responseText);
-                if (xhr.status === 200) {
-                    try {
-                        var resp = JSON.parse(xhr.responseText);
-                        if (resp.code === '200' && resp.data && resp.data.token) {
-                            token = resp.data.token;
-                            console.log('Token获取成功, token值:', token);
-                        } else {
-                            console.warn('Token响应code非200, 响应:', xhr.responseText);
-                        }
-                    } catch(e) {
-                        console.error('Token解析失败:', e);
-                    }
-                }
-                callback();
-            };
-            xhr.onerror = function() {
-                console.error('Token请求失败 (网络错误)');
-                callback();
-            };
-            xhr.ontimeout = function() {
-                console.error('Token请求超时');
-                callback();
-            };
-            xhr.send(JSON.stringify({
-                username: 'admin',
-                password: '123456',
-                phone: '13955274764'
-            }));
-        }
-
+        // 直接跳转 App（token 由 App 原生代码获取，绕过浏览器 Mixed Content 限制）
         function tryOpenApp() {
-            var url = 'enterprise://home';
-            if (token) {
-                url += '?token=' + encodeURIComponent(token);
-                console.log('准备打开App, 携带token的URL:', url);
-            } else {
-                console.warn('准备打开App, 但token为空, URL:', url);
-            }
-            window.location.href = url;
-        }
-
-        function onPageVisibilityChange() {
-            if (document.hidden) {
-                appOpened = true;
-            }
+            console.log('打开 App: enterprise://home');
+            window.location.href = 'enterprise://home';
         }
 
         function checkFallback() {
@@ -154,41 +102,22 @@
 
         document.getElementById('openAppBtn').addEventListener('click', function(e) {
             e.preventDefault();
-            if (token) {
-                // 已有 token，直接打开
-                tryOpenApp();
-                setTimeout(function() {
-                    if (!document.hidden) {
-                        document.getElementById('fallbackHint').style.display = 'block';
-                    }
-                }, 1500);
-            } else {
-                // 先获取 token 再打开
-                document.getElementById('openAppBtn').textContent = '正在准备...';
-                fetchToken(function() {
-                    document.getElementById('openAppBtn').textContent = '打开 App';
-                    tryOpenApp();
-                    setTimeout(function() {
-                        if (!document.hidden) {
-                            document.getElementById('fallbackHint').style.display = 'block';
-                        }
-                    }, 1500);
-                });
-            }
+            tryOpenApp();
+            setTimeout(function() {
+                if (!document.hidden) {
+                    document.getElementById('fallbackHint').style.display = 'block';
+                }
+            }, 1500);
         });
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) appOpened = true;
+        });
+        window.addEventListener('pagehide', function() { appOpened = true; });
+        window.addEventListener('blur', function() { appOpened = true; });
 
         document.addEventListener('DOMContentLoaded', function() {
-            // 页面加载时预取 token
-            fetchToken(function() {});
-            document.addEventListener('visibilitychange', onPageVisibilityChange);
             checkFallback();
-        });
-
-        window.addEventListener('pagehide', function() {
-            appOpened = true;
-        });
-        window.addEventListener('blur', function() {
-            appOpened = true;
         });
     })();
     </script>
