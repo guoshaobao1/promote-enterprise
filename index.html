@@ -85,6 +85,74 @@
     <script>
     (function() {
         var appOpened = false;
+        var PACKAGE_NAME = 'cn.wildfire.enterprise';
+
+        // 检测手机品牌
+        function detectBrand() {
+            var ua = navigator.userAgent.toLowerCase();
+            if (ua.indexOf('huawei') > -1 || ua.indexOf('honor') > -1) {
+                // 进一步区分华为和荣耀
+                if (ua.indexOf('honor') > -1 || ua.indexOf('hihonor') > -1) {
+                    return 'honor';
+                }
+                return 'huawei';
+            }
+            if (ua.indexOf('xiaomi') > -1 || ua.indexOf('mi ') > -1 || ua.indexOf('redmi') > -1) {
+                return 'xiaomi';
+            }
+            if (ua.indexOf('oppo') > -1) {
+                return 'oppo';
+            }
+            if (ua.indexOf('vivo') > -1) {
+                return 'vivo';
+            }
+            if (ua.indexOf('samsung') > -1) {
+                return 'samsung';
+            }
+            return 'unknown';
+        }
+
+        // 获取对应品牌应用市场的下载链接
+        function getMarketUrl(brand) {
+            switch (brand) {
+                case 'xiaomi':
+                    // 小米应用商店
+                    return 'mimarket://details?id=' + PACKAGE_NAME;
+                case 'oppo':
+                    // OPPO 软件商店
+                    return 'oppomarket://app/detail?pkgName=' + PACKAGE_NAME;
+                case 'vivo':
+                    // vivo 应用商店
+                    return 'vivomarket://app/detail?packageName=' + PACKAGE_NAME;
+                case 'huawei':
+                    // 华为应用市场
+                    return 'appmarket://details?id=' + PACKAGE_NAME;
+                case 'honor':
+                    // 荣耀应用市场
+                    return 'honormarket://details?id=' + PACKAGE_NAME;
+                default:
+                    // 未知品牌，返回通用下载页（可替换为实际的通用下载地址）
+                    return 'https://guoshaobao1.github.io/promote-enterprise/';
+            }
+        }
+
+        // 获取应用市场的网页版备用链接（当 scheme 跳转失败时使用）
+        function getMarketWebUrl(brand) {
+            switch (brand) {
+                case 'xiaomi':
+                    return 'https://app.mi.com/details?id=' + PACKAGE_NAME;
+                case 'oppo':
+                    return 'https://www.oppomobile.com/';
+                case 'vivo':
+                    return 'https://app.vivo.com.cn/';
+                case 'huawei':
+                    return 'https://appgallery.huawei.com/app/C' + PACKAGE_NAME;
+                case 'honor':
+                    return 'https://appgallery.hihonor.com/';
+                default:
+                    return 'https://guoshaobao1.github.io/promote-enterprise/';
+            }
+        }
 
         // 直接跳转 App（token 由 App 原生代码获取，绕过浏览器 Mixed Content 限制）
         function tryOpenApp() {
@@ -92,12 +160,48 @@
             window.location.href = 'enterprise://home';
         }
 
+        // 跳转到对应品牌的应用市场
+        function openAppMarket() {
+            var brand = detectBrand();
+            var marketUrl = getMarketUrl(brand);
+            var webUrl = getMarketWebUrl(brand);
+
+            console.log('检测到手机品牌: ' + brand + ', 跳转应用市场: ' + marketUrl);
+
+            // 尝试通过 scheme 跳转到应用市场 App
+            var startTime = Date.now();
+            window.location.href = marketUrl;
+
+            // 如果 scheme 跳转失败（2秒后页面仍在），则跳转到网页版应用市场
+            setTimeout(function() {
+                if (!document.hidden && Date.now() - startTime < 3000) {
+                    window.location.href = webUrl;
+                }
+            }, 2000);
+        }
+
         function checkFallback() {
             setTimeout(function() {
                 if (!appOpened && !document.hidden) {
                     document.getElementById('fallbackHint').style.display = 'block';
+                    updateDownloadLink();
                 }
             }, 2500);
+        }
+
+        // 更新下载链接文字
+        function updateDownloadLink() {
+            var brand = detectBrand();
+            var link = document.getElementById('downloadLink');
+            var brandNames = {
+                'xiaomi': '小米应用商店',
+                'oppo': 'OPPO 软件商店',
+                'vivo': 'vivo 应用商店',
+                'huawei': '华为应用市场',
+                'honor': '荣耀应用市场',
+                'unknown': '应用市场'
+            };
+            link.textContent = '前往' + (brandNames[brand] || '应用市场') + '下载';
         }
 
         document.getElementById('openAppBtn').addEventListener('click', function(e) {
@@ -106,8 +210,14 @@
             setTimeout(function() {
                 if (!document.hidden) {
                     document.getElementById('fallbackHint').style.display = 'block';
+                    updateDownloadLink();
                 }
             }, 1500);
+        });
+
+        document.getElementById('downloadLink').addEventListener('click', function(e) {
+            e.preventDefault();
+            openAppMarket();
         });
 
         document.addEventListener('visibilitychange', function() {
