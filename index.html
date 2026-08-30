@@ -68,48 +68,6 @@
             color: rgba(255,255,255,0.65);
             font-size: 13px;
         }
-        .download-btn {
-            display: none;
-            margin-top: 16px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            font-size: 16px;
-            font-weight: 500;
-            padding: 12px 36px;
-            border-radius: 30px;
-            text-decoration: none;
-            border: 1px solid rgba(255,255,255,0.4);
-            transition: background 0.2s;
-        }
-        .download-btn:active {
-            background: rgba(255,255,255,0.3);
-        }
-        .toast {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.75);
-            color: white;
-            padding: 16px 24px;
-            border-radius: 10px;
-            font-size: 14px;
-            z-index: 999;
-            display: none;
-            max-width: 80%;
-            text-align: center;
-            line-height: 1.5;
-        }
-        .toast.show {
-            display: block;
-            animation: fadeInOut 3s ease-in-out;
-        }
-        @keyframes fadeInOut {
-            0% { opacity: 0; }
-            15% { opacity: 1; }
-            85% { opacity: 1; }
-            100% { opacity: 0; }
-        }
     </style>
 </head>
 <body>
@@ -118,14 +76,11 @@
         <h1>欢迎使用 职通招聘企业版</h1>
         <p>海量职位，精准匹配<br>助你找到理想员工</p>
         <a class="btn" href="#" id="openAppBtn">打开 App</a>
-        <a class="download-btn" href="#" id="downloadBtn">前往应用市场下载</a>
         <p class="hint" id="fallbackHint" style="display:none;">
             未检测到 App？<br>
             <a href="#" style="color:white;text-decoration:underline;" id="downloadLink">下载职通招聘企业版 App</a>
         </p>
     </div>
-
-    <div class="toast" id="toast"></div>
 
     <script>
     (function() {
@@ -229,27 +184,15 @@
             setTimeout(function() {
                 if (!appOpened && !document.hidden) {
                     document.getElementById('fallbackHint').style.display = 'block';
-                    document.getElementById('downloadBtn').style.display = 'inline-block';
-                    updateDownloadBtn();
+                    updateDownloadLink();
                 }
             }, 2500);
         }
 
-        // 显示 Toast 提示
-        function showToast(msg, duration) {
-            var toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.classList.remove('show');
-            // 触发重绘以重启动画
-            void toast.offsetWidth;
-            toast.classList.add('show');
-            setTimeout(function() {
-                toast.classList.remove('show');
-            }, duration || 3000);
-        }
-
-        // 获取品牌中文名
-        function getBrandName(brand) {
+        // 更新下载链接文字
+        function updateDownloadLink() {
+            var brand = detectBrand();
+            var link = document.getElementById('downloadLink');
             var brandNames = {
                 'xiaomi': '小米应用商店',
                 'oppo': 'OPPO 软件商店',
@@ -258,23 +201,7 @@
                 'honor': '荣耀应用市场',
                 'unknown': '应用市场'
             };
-            return brandNames[brand] || '应用市场';
-        }
-
-        // 更新下载按钮文字
-        function updateDownloadBtn() {
-            var brand = detectBrand();
-            var btn = document.getElementById('downloadBtn');
-            btn.textContent = '前往' + getBrandName(brand) + '下载';
-        }
-
-        // 显示下载引导
-        function showDownloadGuide() {
-            var brand = detectBrand();
-            var brandName = getBrandName(brand);
-            showToast('未检测到 App，请前往' + brandName + '下载安装');
-            document.getElementById('downloadBtn').style.display = 'inline-block';
-            updateDownloadBtn();
+            link.textContent = '前往' + (brandNames[brand] || '应用市场') + '下载';
         }
 
         document.getElementById('openAppBtn').addEventListener('click', function(e) {
@@ -282,14 +209,10 @@
             tryOpenApp();
             setTimeout(function() {
                 if (!document.hidden) {
-                    showDownloadGuide();
+                    document.getElementById('fallbackHint').style.display = 'block';
+                    updateDownloadLink();
                 }
             }, 1500);
-        });
-
-        document.getElementById('downloadBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            openAppMarket();
         });
 
         document.getElementById('downloadLink').addEventListener('click', function(e) {
