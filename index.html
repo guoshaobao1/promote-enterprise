@@ -120,7 +120,8 @@
                     return 'mimarket://details?id=' + PACKAGE_NAME;
                 case 'oppo':
                     // OPPO 软件商店
-                    return 'oppomarket://details?packagename=cn.wildfire.enterprise';
+                    return 'intent://details?packagename=' + PACKAGE_NAME +
+           '#Intent;scheme=oppomarket;package=com.heytap.market;end';
                 case 'vivo':
                     // vivo 应用商店
                     return 'vivomarket://app/detail?packageName=' + PACKAGE_NAME;
