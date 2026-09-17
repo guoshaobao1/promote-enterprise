@@ -90,6 +90,7 @@
         // 检测手机品牌
         function detectBrand() {
             var ua = navigator.userAgent.toLowerCase();
+            console.log('当前 User-Agent: ' + navigator.userAgent);
             if (ua.indexOf('huawei') > -1 || ua.indexOf('honor') > -1) {
                 // 进一步区分华为和荣耀
                 if (ua.indexOf('honor') > -1 || ua.indexOf('hihonor') > -1) {
