@@ -84,6 +84,8 @@
 
     <script>
     (function() {
+        var BUILD_TIME = '2026-09-17 21:35:00';
+        console.log('[promote-enterprise] 版本时间: ' + BUILD_TIME);
         var appOpened = false;
         var PACKAGE_NAME = 'cn.wildfire.enterprise';
 
@@ -122,10 +124,9 @@
                     // 小米应用商店
                     return 'mimarket://details?id=' + PACKAGE_NAME;
                 case 'oppo':
-                    // OPPO 软件商店（欢太应用市场，兼容新旧 scheme）
-                    // 旧版：oppomarket://app/detail?pkgName=
-                    // 新版：heytapmarket://details?id=
-                    return 'heytapmarket://details?id=' + PACKAGE_NAME;
+                    // OPPO 软件商店（欢太应用市场）
+                    // 优先使用 oppomarket scheme（兼容性更好），失败再用标准 market://
+                    return 'oppomarket://app/detail?pkgName=' + PACKAGE_NAME;
                 case 'vivo':
                     // vivo 应用商店
                     return 'vivomarket://app/detail?packageName=' + PACKAGE_NAME;
@@ -163,7 +164,13 @@
         // 直接跳转 App（token 由 App 原生代码获取，绕过浏览器 Mixed Content 限制）
         function tryOpenApp() {
             console.log('打开 App: enterprise://home');
-            window.location.href = 'enterprise://home';
+            // 使用 a 标签点击方式，比 window.location.href 更稳定
+            var a = document.createElement('a');
+            a.href = 'enterprise://home';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         // 跳转到对应品牌的应用市场
@@ -171,19 +178,39 @@
             var brand = detectBrand();
             var marketUrl = getMarketUrl(brand);
             var webUrl = getMarketWebUrl(brand);
+            // 标准 Android 应用市场 scheme（兜底用）
+            var standardMarketUrl = 'market://details?id=' + PACKAGE_NAME;
 
             console.log('检测到手机品牌: ' + brand + ', 跳转应用市场: ' + marketUrl);
 
-            // 尝试通过 scheme 跳转到应用市场 App
-            var startTime = Date.now();
-            window.location.href = marketUrl;
+            // 使用 a 标签点击方式跳转，比 window.location.href 更稳定，不易被浏览器拦截
+            function openByLink(url) {
+                var a = document.createElement('a');
+                a.href = url;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
 
-            // 如果 scheme 跳转失败（2秒后页面仍在），则跳转到网页版应用市场
+            var startTime = Date.now();
+            openByLink(marketUrl);
+
+            // 1.5秒后如果还在当前页，尝试标准 market:// scheme 兜底
             setTimeout(function() {
-                if (!document.hidden && Date.now() - startTime < 3000) {
+                if (!document.hidden && !appOpened && Date.now() - startTime < 3000) {
+                    console.log('品牌 scheme 跳转失败，尝试标准 market scheme: ' + standardMarketUrl);
+                    openByLink(standardMarketUrl);
+                }
+            }, 1500);
+
+            // 3秒后如果还在当前页，跳转到网页版应用市场
+            setTimeout(function() {
+                if (!document.hidden && !appOpened && Date.now() - startTime < 4500) {
+                    console.log('所有 scheme 跳转失败，跳转网页版: ' + webUrl);
                     window.location.href = webUrl;
                 }
-            }, 2000);
+            }, 3000);
         }
 
         function checkFallback() {
