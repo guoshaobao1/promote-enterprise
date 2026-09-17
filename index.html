@@ -100,7 +100,9 @@
             if (ua.indexOf('xiaomi') > -1 || ua.indexOf('mi ') > -1 || ua.indexOf('redmi') > -1) {
                 return 'xiaomi';
             }
-            if (ua.indexOf('oppo') > -1) {
+            // OPPO/一加/真我（ColorOS/Heytap 系）：UA 中可能不含 oppo 字样，但会有 heytap/coloros/oplus/realme/oneplus 等特征
+            if (ua.indexOf('oppo') > -1 || ua.indexOf('heytap') > -1 || ua.indexOf('coloros') > -1
+                || ua.indexOf('oplus') > -1 || ua.indexOf('realme') > -1 || ua.indexOf('oneplus') > -1) {
                 return 'oppo';
             }
             if (ua.indexOf('vivo') > -1) {
@@ -119,9 +121,10 @@
                     // 小米应用商店
                     return 'mimarket://details?id=' + PACKAGE_NAME;
                 case 'oppo':
-                    // OPPO 软件商店
-                    return 'intent://details?packagename=' + PACKAGE_NAME +
-           '#Intent;scheme=oppomarket;package=com.heytap.market;end';
+                    // OPPO 软件商店（欢太应用市场，兼容新旧 scheme）
+                    // 旧版：oppomarket://app/detail?pkgName=
+                    // 新版：heytapmarket://details?id=
+                    return 'heytapmarket://details?id=' + PACKAGE_NAME;
                 case 'vivo':
                     // vivo 应用商店
                     return 'vivomarket://app/detail?packageName=' + PACKAGE_NAME;
@@ -143,7 +146,8 @@
                 case 'xiaomi':
                     return 'https://app.mi.com/details?id=' + PACKAGE_NAME;
                 case 'oppo':
-                    return 'https://www.oppomobile.com/';
+                    // OPPO 欢太应用商店网页版
+                    return 'https://m.heytap.com/m/appdetail?pkgName=' + PACKAGE_NAME;
                 case 'vivo':
                     return 'https://app.vivo.com.cn/';
                 case 'huawei':
